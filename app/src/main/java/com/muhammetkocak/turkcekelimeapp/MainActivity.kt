@@ -5,43 +5,31 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.muhammetkocak.turkcekelimeapp.ui.theme.TurkcekelimeappTheme
+import androidx.navigation.compose.rememberNavController
+import com.muhammetkocak.turkcekelimeapp.navigation.AppNavHost
+import com.muhammetkocak.turkcekelimeapp.navigation.Screen
+import com.muhammetkocak.turkcekelimeapp.ui.theme.ThemeMode
+import com.muhammetkocak.turkcekelimeapp.ui.theme.TurkceKelimeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            TurkcekelimeappTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
+        setContent { AppRoot() }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TurkcekelimeappTheme {
-        Greeting("Android")
+private fun AppRoot() {
+    TurkceKelimeTheme(themeMode = ThemeMode.System, dynamicColorEnabled = true) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            val navController = rememberNavController()
+            AppNavHost(navController = navController, startDestination = Screen.Home)
+        }
     }
 }
