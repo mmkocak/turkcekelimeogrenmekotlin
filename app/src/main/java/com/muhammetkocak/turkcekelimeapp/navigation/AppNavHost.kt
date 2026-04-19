@@ -17,11 +17,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.muhammetkocak.turkcekelimeapp.core.tts.rememberTtsManager
 import com.muhammetkocak.turkcekelimeapp.domain.model.LearningDirection
 import com.muhammetkocak.turkcekelimeapp.domain.model.StudyMode
 import com.muhammetkocak.turkcekelimeapp.ui.addword.AddEditWordScreen
 import com.muhammetkocak.turkcekelimeapp.ui.home.HomeScreen
 import com.muhammetkocak.turkcekelimeapp.ui.library.LibraryScreen
+import com.muhammetkocak.turkcekelimeapp.ui.study.flashcard.FlashcardScreen
+import com.muhammetkocak.turkcekelimeapp.ui.study.listening.ListeningScreen
+import com.muhammetkocak.turkcekelimeapp.ui.study.quiz.QuizScreen
+import com.muhammetkocak.turkcekelimeapp.ui.study.typing.TypingScreen
 
 @Composable
 fun AppNavHost(
@@ -112,7 +117,20 @@ private fun NavGraphBuilder.wordDetailRoute(nav: NavHostController) {
 }
 
 private fun NavGraphBuilder.studyRoute(nav: NavHostController) {
-    composable<Screen.Study> { PlaceholderScreen(title = "Çalışma") }
+    composable<Screen.Study> { entry ->
+        val route = entry.toRoute<Screen.Study>()
+        val mode = StudyMode.fromRaw(route.mode)
+        val tts = rememberTtsManager()
+        val exit: () -> Unit = {
+            nav.popBackStack(Screen.Home, inclusive = false)
+        }
+        when (mode) {
+            StudyMode.Flashcard -> FlashcardScreen(onExit = exit, tts = tts)
+            StudyMode.Quiz -> QuizScreen(onExit = exit)
+            StudyMode.Typing -> TypingScreen(onExit = exit)
+            StudyMode.Listening -> ListeningScreen(onExit = exit, tts = tts)
+        }
+    }
 }
 
 private fun NavGraphBuilder.statsRoute(nav: NavHostController) {
