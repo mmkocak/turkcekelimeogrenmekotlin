@@ -1,0 +1,19 @@
+package com.muhammetkocak.turkcekelimeapp.ui.stats
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.muhammetkocak.turkcekelimeapp.domain.usecase.GetStatsUseCase
+import com.muhammetkocak.turkcekelimeapp.domain.usecase.StatsSnapshot
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+
+@HiltViewModel
+class StatsViewModel @Inject constructor(
+    getStats: GetStatsUseCase
+) : ViewModel() {
+    val state: StateFlow<StatsSnapshot?> = getStats()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+}

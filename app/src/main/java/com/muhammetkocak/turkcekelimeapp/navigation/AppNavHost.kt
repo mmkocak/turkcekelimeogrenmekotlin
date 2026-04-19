@@ -23,6 +23,9 @@ import com.muhammetkocak.turkcekelimeapp.domain.model.StudyMode
 import com.muhammetkocak.turkcekelimeapp.ui.addword.AddEditWordScreen
 import com.muhammetkocak.turkcekelimeapp.ui.home.HomeScreen
 import com.muhammetkocak.turkcekelimeapp.ui.library.LibraryScreen
+import com.muhammetkocak.turkcekelimeapp.ui.onboarding.OnboardingScreen
+import com.muhammetkocak.turkcekelimeapp.ui.settings.SettingsScreen
+import com.muhammetkocak.turkcekelimeapp.ui.stats.StatsScreen
 import com.muhammetkocak.turkcekelimeapp.ui.study.flashcard.FlashcardScreen
 import com.muhammetkocak.turkcekelimeapp.ui.study.listening.ListeningScreen
 import com.muhammetkocak.turkcekelimeapp.ui.study.quiz.QuizScreen
@@ -64,7 +67,13 @@ fun AppNavHost(
 
 private fun NavGraphBuilder.onboardingRoute(nav: NavHostController) {
     composable<Screen.Onboarding> {
-        PlaceholderScreen(title = "Onboarding")
+        OnboardingScreen(
+            onFinished = {
+                nav.navigate(Screen.Home) {
+                    popUpTo(Screen.Onboarding) { inclusive = true }
+                }
+            }
+        )
     }
 }
 
@@ -134,11 +143,15 @@ private fun NavGraphBuilder.studyRoute(nav: NavHostController) {
 }
 
 private fun NavGraphBuilder.statsRoute(nav: NavHostController) {
-    composable<Screen.Stats> { PlaceholderScreen(title = "İstatistikler") }
+    composable<Screen.Stats> {
+        StatsScreen(onBack = { nav.popBackStack() })
+    }
 }
 
 private fun NavGraphBuilder.settingsRoute(nav: NavHostController) {
-    composable<Screen.Settings> { PlaceholderScreen(title = "Ayarlar") }
+    composable<Screen.Settings> {
+        SettingsScreen(onBack = { nav.popBackStack() })
+    }
 }
 
 @Composable
