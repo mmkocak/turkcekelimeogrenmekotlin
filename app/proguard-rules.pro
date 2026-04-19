@@ -1,21 +1,40 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Keep line numbers for crash stack traces.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- Kotlinx Serialization ---
+# @Serializable annotated classes need their companion + serializer preserved.
+-keepattributes InnerClasses,Signature
+-keepclassmembers,allowobfuscation class **$Companion {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-if @kotlinx.serialization.Serializable class **
+-keepclassmembers class <1> {
+    static <1>$Companion Companion;
+    static kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class com.muhammetkocak.turkcekelimeapp.**$$serializer { *; }
+-keepclassmembers class com.muhammetkocak.turkcekelimeapp.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.muhammetkocak.turkcekelimeapp.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Room ---
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-keep class com.muhammetkocak.turkcekelimeapp.data.local.entity.** { *; }
+-keep class com.muhammetkocak.turkcekelimeapp.data.local.dao.** { *; }
+-keep class com.muhammetkocak.turkcekelimeapp.data.local.AppDatabase_Impl { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- Hilt / Dagger ---
+-keep class dagger.hilt.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ApplicationComponentManager { *; }
+-keep @dagger.hilt.android.HiltAndroidApp class * { *; }
+-keepclassmembers @dagger.hilt.android.HiltAndroidApp class * { *; }
+
+# --- Compose Navigation type-safe routes (rely on Serializable Screen sealed interface) ---
+-keep class com.muhammetkocak.turkcekelimeapp.navigation.Screen { *; }
+-keep class com.muhammetkocak.turkcekelimeapp.navigation.Screen$* { *; }

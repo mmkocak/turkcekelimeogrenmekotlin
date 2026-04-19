@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -153,7 +153,7 @@ private fun HomeTopBar(
         StreakBadge(streak = streak)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             IconButton(onClick = onLibrary) {
-                Icon(Icons.Filled.LibraryBooks, contentDescription = "Kütüphane")
+                Icon(Icons.AutoMirrored.Filled.LibraryBooks, contentDescription = "Kütüphane")
             }
             IconButton(onClick = onStats) {
                 Icon(Icons.Filled.BarChart, contentDescription = "İstatistikler")
