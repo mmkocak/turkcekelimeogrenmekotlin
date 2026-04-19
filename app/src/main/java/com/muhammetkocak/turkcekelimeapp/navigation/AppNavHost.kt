@@ -16,6 +16,12 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import com.muhammetkocak.turkcekelimeapp.domain.model.LearningDirection
+import com.muhammetkocak.turkcekelimeapp.domain.model.StudyMode
+import com.muhammetkocak.turkcekelimeapp.ui.addword.AddEditWordScreen
+import com.muhammetkocak.turkcekelimeapp.ui.home.HomeScreen
+import com.muhammetkocak.turkcekelimeapp.ui.library.LibraryScreen
 
 @Composable
 fun AppNavHost(
@@ -51,22 +57,54 @@ fun AppNavHost(
     }
 }
 
-// Phase 1 placeholder routes — concrete screens land in subsequent phases.
-
 private fun NavGraphBuilder.onboardingRoute(nav: NavHostController) {
-    composable<Screen.Onboarding> { PlaceholderScreen(title = "Onboarding") }
+    composable<Screen.Onboarding> {
+        PlaceholderScreen(title = "Onboarding")
+    }
 }
 
 private fun NavGraphBuilder.homeRoute(nav: NavHostController) {
-    composable<Screen.Home> { PlaceholderScreen(title = "Ana Ekran") }
+    composable<Screen.Home> {
+        HomeScreen(
+            onOpenLibrary = { catId -> nav.navigate(Screen.Library(catId)) },
+            onOpenAddWord = { nav.navigate(Screen.AddEditWord()) },
+            onOpenSettings = { nav.navigate(Screen.Settings) },
+            onOpenStats = { nav.navigate(Screen.Stats) },
+            onStartStudy = { mode, direction, categoryId ->
+                nav.navigate(Screen.Study(mode = mode.raw, direction = direction.raw, categoryId = categoryId))
+            }
+        )
+    }
 }
 
 private fun NavGraphBuilder.libraryRoute(nav: NavHostController) {
-    composable<Screen.Library> { PlaceholderScreen(title = "Kütüphane") }
+    composable<Screen.Library> { entry ->
+        val route = entry.toRoute<Screen.Library>()
+        LibraryScreen(
+            initialCategoryId = route.categoryId,
+            onBack = { nav.popBackStack() },
+            onAddWord = { nav.navigate(Screen.AddEditWord()) },
+            onEditWord = { id -> nav.navigate(Screen.AddEditWord(wordId = id)) },
+            onStudyWord = {
+                nav.navigate(
+                    Screen.Study(
+                        mode = StudyMode.Flashcard.raw,
+                        direction = LearningDirection.ForeignToTurkish.raw,
+                        categoryId = null
+                    )
+                )
+            }
+        )
+    }
 }
 
 private fun NavGraphBuilder.addEditWordRoute(nav: NavHostController) {
-    composable<Screen.AddEditWord> { PlaceholderScreen(title = "Kelime Ekle / Düzenle") }
+    composable<Screen.AddEditWord> {
+        AddEditWordScreen(
+            onBack = { nav.popBackStack() },
+            onSaved = { nav.popBackStack() }
+        )
+    }
 }
 
 private fun NavGraphBuilder.wordDetailRoute(nav: NavHostController) {

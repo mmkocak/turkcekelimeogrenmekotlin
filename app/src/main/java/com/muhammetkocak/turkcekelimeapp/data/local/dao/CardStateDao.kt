@@ -97,4 +97,7 @@ interface CardStateDao {
         WHERE w.categoryId = :categoryId AND cs.direction = :direction AND cs.mastery = 'MASTERED'
     """)
     fun observeMasteredCountForCategory(categoryId: Long, direction: String): Flow<Int>
+
+    @Query("SELECT DISTINCT wordId FROM card_state WHERE mastery = 'MASTERED'")
+    fun observeMasteredWordIds(): Flow<List<Long>>
 }

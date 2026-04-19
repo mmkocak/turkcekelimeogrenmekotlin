@@ -90,6 +90,9 @@ class WordRepository @Inject constructor(
         wordDao.delete(word.toEntity())
     }
 
-    suspend fun observeMasteredCount(categoryId: Long, direction: LearningDirection): Flow<Int> =
+    fun observeMasteredCount(categoryId: Long, direction: LearningDirection): Flow<Int> =
         cardStateDao.observeMasteredCountForCategory(categoryId, direction.raw)
+
+    fun observeMasteredWordIds(): Flow<List<Long>> =
+        cardStateDao.observeMasteredWordIds()
 }
