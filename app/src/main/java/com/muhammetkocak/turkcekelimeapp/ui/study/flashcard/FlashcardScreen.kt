@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -48,6 +50,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.muhammetkocak.turkcekelimeapp.core.tts.TextToSpeechManager
@@ -135,7 +138,7 @@ private fun FlashcardContent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1.4f)
+                .aspectRatio(1.3f)
                 .graphicsLayer {
                     rotationY = rotation
                     cameraDistance = 12f * density
@@ -144,20 +147,25 @@ private fun FlashcardContent(
                     flipped = !flipped
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (rotation <= 90f) MaterialTheme.colorScheme.primaryContainer
-                else MaterialTheme.colorScheme.secondaryContainer
+                containerColor = if (rotation <= 90f) MaterialTheme.colorScheme.surface
+                else MaterialTheme.colorScheme.primaryContainer
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            border = if (rotation <= 90f)
+                androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            else null
         ) {
-            Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(28.dp), contentAlignment = Alignment.Center) {
                 if (rotation <= 90f) {
                     FlashcardFace(
+                        label = if (card.direction == com.muhammetkocak.turkcekelimeapp.domain.model.LearningDirection.ForeignToTurkish) "İNGİLİZCE" else "TÜRKÇE",
                         title = card.word.prompt(card.direction),
                         subtitle = card.word.promptExample(card.direction),
                         ipa = card.word.ipa,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        accent = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         onSpeak = {
                             scope.launch { tts.speak(card.word.prompt(card.direction), card.direction, TextToSpeechManager.Side.Prompt) }
                         }
@@ -165,10 +173,12 @@ private fun FlashcardContent(
                 } else {
                     Box(Modifier.graphicsLayer { rotationY = 180f }) {
                         FlashcardFace(
+                            label = if (card.direction == com.muhammetkocak.turkcekelimeapp.domain.model.LearningDirection.ForeignToTurkish) "TÜRKÇE" else "İNGİLİZCE",
                             title = card.word.answer(card.direction),
                             subtitle = card.word.answerExample(card.direction),
                             ipa = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            accent = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             onSpeak = {
                                 scope.launch { tts.speak(card.word.answer(card.direction), card.direction, TextToSpeechManager.Side.Answer) }
                             }
@@ -192,43 +202,77 @@ private fun FlashcardContent(
 
 @Composable
 private fun FlashcardFace(
+    label: String,
     title: String,
     subtitle: String?,
     ipa: String?,
+    accent: Color,
     tint: Color,
     onSpeak: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        IconButton(onClick = onSpeak, modifier = Modifier.align(Alignment.End)) {
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Seslendir", tint = tint)
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            color = tint,
-            textAlign = TextAlign.Center
-        )
-        if (!ipa.isNullOrBlank()) {
-            Spacer(Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
-                text = "/$ipa/",
-                style = MaterialTheme.typography.bodyMedium,
-                color = tint.copy(alpha = 0.7f)
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                ),
+                color = accent,
+                modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(100))
+                    .background(accent.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
             )
+            androidx.compose.material3.IconButton(
+                onClick = onSpeak,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(accent.copy(alpha = 0.12f))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Seslendir", tint = accent)
+            }
         }
-        if (!subtitle.isNullOrBlank()) {
-            Spacer(Modifier.height(12.dp))
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = tint.copy(alpha = 0.85f),
+                text = title,
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
+                color = tint,
                 textAlign = TextAlign.Center
             )
+            if (!ipa.isNullOrBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "/$ipa/",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = tint.copy(alpha = 0.55f)
+                )
+            }
+        }
+
+        if (!subtitle.isNullOrBlank()) {
+            Text(
+                text = "\u201C$subtitle\u201D",
+                style = MaterialTheme.typography.bodyLarge,
+                color = tint.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
+        } else {
+            Spacer(Modifier.height(0.dp))
         }
     }
 }

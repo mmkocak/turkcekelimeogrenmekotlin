@@ -270,15 +270,16 @@ private fun WordRow(
 ) {
     Card(
         onClick = onClick,
-        shape = MaterialTheme.shapes.large,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -287,16 +288,16 @@ private fun WordRow(
                     .getOrDefault(MaterialTheme.colorScheme.primary)
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(accent.copy(alpha = 0.18f)),
+                        .size(48.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                        .background(accent.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center
-                ) { Text(category.emoji, fontSize = 22.sp) }
+                ) { Text(category.emoji, fontSize = 24.sp) }
             }
             Column(Modifier.weight(1f)) {
                 Text(
                     text = word.foreignTerm,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1
                 )
                 Text(
@@ -306,10 +307,15 @@ private fun WordRow(
                     maxLines = 1
                 )
                 if (!word.partOfSpeech.isNullOrBlank()) {
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = word.partOfSpeech.replaceFirstChar { it.titlecase() },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(100))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
             }

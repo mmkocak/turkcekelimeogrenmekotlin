@@ -134,20 +134,22 @@ fun MasteryBadge(mastery: CardMastery, modifier: Modifier = Modifier) {
 
 @Composable
 fun StreakBadge(streak: Int, modifier: Modifier = Modifier) {
-    val color = if (streak > 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline
+    val active = streak > 0
+    val container = if (active) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
+    val text = if (active) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(100))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .background(container)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(text = "🔥", fontSize = 16.sp)
+        Text(text = if (active) "🔥" else "✨", fontSize = 14.sp)
         Text(
-            text = "$streak gün",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface
+            text = "$streak",
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            color = text
         )
     }
 }

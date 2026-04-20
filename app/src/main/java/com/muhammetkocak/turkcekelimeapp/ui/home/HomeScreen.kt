@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,12 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -30,11 +33,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,10 +52,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.muhammetkocak.turkcekelimeapp.domain.model.Category
 import com.muhammetkocak.turkcekelimeapp.domain.model.LearningDirection
 import com.muhammetkocak.turkcekelimeapp.domain.model.StudyMode
-import com.muhammetkocak.turkcekelimeapp.ui.component.IconChipCard
-import com.muhammetkocak.turkcekelimeapp.ui.component.ProgressRing
 import com.muhammetkocak.turkcekelimeapp.ui.component.SectionHeader
 import com.muhammetkocak.turkcekelimeapp.ui.component.StreakBadge
+import com.muhammetkocak.turkcekelimeapp.ui.theme.HeroGradientEnd
+import com.muhammetkocak.turkcekelimeapp.ui.theme.HeroGradientEndDark
+import com.muhammetkocak.turkcekelimeapp.ui.theme.HeroGradientStart
+import com.muhammetkocak.turkcekelimeapp.ui.theme.HeroGradientStartDark
 
 @Composable
 fun HomeScreen(
@@ -67,14 +75,18 @@ fun HomeScreen(
             ExtendedFloatingActionButton(
                 onClick = onOpenAddWord,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Kelime Ekle") }
+                text = { Text("Kelime Ekle", fontWeight = FontWeight.SemiBold) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(4.dp)
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
                 HomeTopBar(
@@ -86,7 +98,7 @@ fun HomeScreen(
             }
 
             item {
-                TodaySummaryCard(
+                HeroCard(
                     dueCount = state.summary?.dueCount ?: 0,
                     todayReviewCount = state.summary?.todayReviewCount ?: 0,
                     dailyGoal = state.summary?.dailyGoal ?: 20,
@@ -98,21 +110,16 @@ fun HomeScreen(
                 )
             }
 
-            item { SectionHeader(title = "Çalışma Modu") }
+            item { SectionHeader(title = "Çalışma modları") }
             item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp)
+                ) {
                     items(StudyMode.entries.toList()) { mode ->
-                        IconChipCard(
-                            emoji = mode.emoji,
-                            title = mode.labelTr,
-                            subtitle = when (mode) {
-                                StudyMode.Flashcard -> "Kart çevir, SRS ile tekrar et"
-                                StudyMode.Quiz -> "Doğru anlamı 4 seçenekten seç"
-                                StudyMode.Typing -> "Anlamı yazarak test et"
-                                StudyMode.Listening -> "Dinle, sonra seç"
-                            },
-                            onClick = { onStartStudy(mode, state.preferences.primaryDirection, null) },
-                            modifier = Modifier.width(260.dp)
+                        ModeCard(
+                            mode = mode,
+                            onClick = { onStartStudy(mode, state.preferences.primaryDirection, null) }
                         )
                     }
                 }
@@ -134,6 +141,8 @@ fun HomeScreen(
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
+
+            item { Spacer(Modifier.height(72.dp)) } // FAB clearance
         }
     }
 }
@@ -146,27 +155,49 @@ private fun HomeTopBar(
     onLibrary: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        StreakBadge(streak = streak)
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            IconButton(onClick = onLibrary) {
-                Icon(Icons.AutoMirrored.Filled.LibraryBooks, contentDescription = "Kütüphane")
-            }
-            IconButton(onClick = onStats) {
-                Icon(Icons.Filled.BarChart, contentDescription = "İstatistikler")
-            }
-            IconButton(onClick = onSettings) {
-                Icon(Icons.Filled.Settings, contentDescription = "Ayarlar")
-            }
+        Column {
+            Text(
+                text = "Merhaba 👋",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "Bugün öğrenelim",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            StreakBadge(streak = streak)
+            TopIcon(Icons.AutoMirrored.Filled.LibraryBooks, "Kütüphane", onLibrary)
+            TopIcon(Icons.Filled.BarChart, "İstatistikler", onStats)
+            TopIcon(Icons.Filled.Settings, "Ayarlar", onSettings)
         }
     }
 }
 
 @Composable
-private fun TodaySummaryCard(
+private fun TopIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Icon(icon, contentDescription = description, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun HeroCard(
     dueCount: Int,
     todayReviewCount: Int,
     dailyGoal: Int,
@@ -174,53 +205,166 @@ private fun TodaySummaryCard(
     direction: LearningDirection,
     onStart: () -> Unit
 ) {
+    val dark = isSystemInDarkTheme()
+    val gradient = if (dark) {
+        Brush.linearGradient(listOf(HeroGradientStartDark, HeroGradientEndDark))
+    } else {
+        Brush.linearGradient(listOf(HeroGradientStart, HeroGradientEnd))
+    }
     Card(
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(32.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBehind { drawRect(gradient) }
+                .padding(24.dp)
         ) {
-            ProgressRing(
-                progress = progress,
-                modifier = Modifier.size(96.dp),
-                progressColor = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "$todayReviewCount",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = "/$dailyGoal",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                }
+                Text(
+                    text = direction.labelShort(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(100))
+                        .background(Color.White.copy(alpha = 0.18f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+                Text(
+                    text = "$dueCount kart hazır",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(20.dp))
+            Text(
+                text = "$todayReviewCount",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 72.sp
+                ),
+                color = Color.White
+            )
+            Text(
+                text = "bugünkü tekrarın · hedef $dailyGoal",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.85f)
+            )
+            Spacer(Modifier.height(18.dp))
+            HeroProgressBar(progress = progress.coerceIn(0f, 1f))
+            Spacer(Modifier.height(20.dp))
+            androidx.compose.material3.Button(
+                onClick = onStart,
+                shape = RoundedCornerShape(100),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .semantics { contentDescription = "Çalışmaya başla" }
+            ) {
                 Text(
-                    text = "Bugünkü Çalışma",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    text = "Çalışmaya Başla",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(Modifier.width(8.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroProgressBar(progress: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(8.dp)
+            .clip(RoundedCornerShape(100))
+            .background(Color.White.copy(alpha = 0.22f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .height(8.dp)
+                .clip(RoundedCornerShape(100))
+                .background(Color.White)
+        )
+    }
+}
+
+@Composable
+private fun ModeCard(mode: StudyMode, onClick: () -> Unit) {
+    val (bg, fg, accent) = when (mode) {
+        StudyMode.Flashcard -> Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            MaterialTheme.colorScheme.primary
+        )
+        StudyMode.Quiz -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            MaterialTheme.colorScheme.tertiary
+        )
+        StudyMode.Typing -> Triple(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer,
+            MaterialTheme.colorScheme.secondary
+        )
+        StudyMode.Listening -> Triple(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            MaterialTheme.colorScheme.primary
+        )
+    }
+    val subtitle = when (mode) {
+        StudyMode.Flashcard -> "Kart çevir, SRS"
+        StudyMode.Quiz -> "4 seçenekten seç"
+        StudyMode.Typing -> "Anlamı yaz"
+        StudyMode.Listening -> "Dinle, seç"
+    }
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(170.dp).height(140.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = bg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(accent.copy(alpha = 0.22f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = mode.emoji, fontSize = 24.sp)
+            }
+            Column {
+                Text(
+                    text = mode.labelTr,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = fg
                 )
                 Text(
-                    text = "$dueCount kart hazır · ${direction.labelShort()}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = fg.copy(alpha = 0.75f)
                 )
-                Button(
-                    onClick = onStart,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier.semantics { contentDescription = "Çalışmaya başla" }
-                ) {
-                    Text(text = "Çalışmaya Başla")
-                }
             }
         }
     }
@@ -232,33 +376,48 @@ private fun CategoryCard(category: Category, modifier: Modifier, onClick: () -> 
         .getOrDefault(MaterialTheme.colorScheme.primary)
     Card(
         onClick = onClick,
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
+        modifier = modifier.height(128.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Row(Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(accent.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center
-            ) { Text(text = category.emoji, fontSize = 22.sp) }
-            Text(
-                text = category.nameTr,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 1
+                    .width(6.dp)
+                    .fillMaxHeight()
+                    .background(accent)
             )
-            Text(
-                text = category.nameEn,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = category.emoji, fontSize = 22.sp)
+                }
+                Column {
+                    Text(
+                        text = category.nameTr,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = category.nameEn,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
         }
     }
 }
